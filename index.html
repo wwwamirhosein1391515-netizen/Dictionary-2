@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Dictionary | دیکشنری</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#fbfaf6;
+    --paper-2:#f4f2ea;
+    --ink:#20261f;
+    --moss-50:#eef1e6;
+    --moss-100:#dbe3cd;
+    --moss-300:#a9bd8c;
+    --moss-500:#6f8a52;
+    --moss-600:#57703e;
+    --moss-700:#3e5230;
+    --moss-900:#232f1c;
+    --gold:#c9a35a;
+    --line: rgba(35,47,28,0.12);
+    --shadow-soft: 0 10px 40px -12px rgba(35,47,28,0.18);
+    --shadow-deep: 0 24px 60px -20px rgba(35,47,28,0.35);
+    --radius-xl: 42px;
+    --radius-lg: 30px;
+    --radius-md: 22px;
+    --radius-pill: 999px;
+    --ease: cubic-bezier(.22,1,.36,1);
+    --ease-soft: cubic-bezier(.4,0,.2,1);
+  }
+
+  *{
+    box-sizing:border-box;
+    -webkit-tap-highlight-color: transparent;
+    tap-highlight-color: transparent;
+  }
+  button, a, input, [role="button"], .panel-item, .sugg-item, .history-item, .syn-chip{
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
+  }
+  button::-moz-focus-inner{ border:0; }
+  html,body{
+    margin:0; padding:0; height:100%;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Vazirmatn', sans-serif;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{ background:var(--moss-300); color:var(--moss-900); }
+
+  ::-webkit-scrollbar{ width:10px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+  ::-webkit-scrollbar-thumb{ background:var(--moss-300); border-radius:99px; }
+  ::-webkit-scrollbar-thumb:hover{ background:var(--moss-500); }
+
+  .eng{ font-family:'Fraunces', serif; }
+
+  /* ================= BACKGROUND AMBIENCE ================= */
+  .bg-field{
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+    background:
+      radial-gradient(60% 50% at 12% 8%, rgba(111,138,82,0.12), transparent 60%),
+      radial-gradient(50% 45% at 92% 15%, rgba(201,163,90,0.10), transparent 60%),
+      radial-gradient(70% 60% at 50% 105%, rgba(87,112,62,0.10), transparent 60%),
+      var(--paper);
+  }
+  .bg-field::before{
+    content:"";
+    position:absolute; inset:0;
+    background-image: radial-gradient(circle, rgba(35,47,28,0.05) 1px, transparent 1px);
+    background-size: 26px 26px;
+    opacity:.5;
+    mask-image: radial-gradient(60% 60% at 50% 30%, black, transparent 85%);
+  }
+
+  /* ================= INTRO ================= */
+  #intro{
+    position:fixed; inset:0; z-index:1000;
+    display:flex; align-items:center; justify-content:center;
+    flex-direction:column;
+    background: linear-gradient(180deg, var(--paper) 0%, var(--moss-50) 140%);
+    transition: opacity 1.1s var(--ease), visibility 1.1s var(--ease), filter 1.1s var(--ease);
+  }
+  #intro.hide{
+    opacity:0; visibility:hidden; filter:blur(6px);
+    pointer-events:none;
+  }
+  .intro-leaf{
+    width:54px; height:54px; margin-bottom:28px;
+    opacity:0; transform:translateY(14px) scale(.85);
+    animation: leafIn 1.2s var(--ease) .15s forwards;
+  }
+  .intro-hello{
+    font-family:'Fraunces', serif;
+    font-weight:400; font-style:italic;
+    font-size: clamp(2.6rem, 8vw, 4.6rem);
+    color: var(--moss-700);
+    opacity:0;
+    letter-spacing:.5px;
+    transform: translateY(18px);
+    animation: softIn 1.4s var(--ease) .35s forwards;
+  }
+  .intro-sub{
+    margin-top:14px;
+    font-size: clamp(.85rem, 2vw, 1.05rem);
+    letter-spacing:.32em;
+    text-transform:uppercase;
+    color: var(--moss-500);
+    opacity:0;
+    transform: translateY(14px);
+    animation: softIn 1.4s var(--ease) .95s forwards;
+  }
+  @keyframes softIn{
+    to{ opacity:1; transform:translateY(0); }
+  }
+  @keyframes leafIn{
+    to{ opacity:1; transform:translateY(0) scale(1); }
+  }
+  .intro-ring{
+    position:absolute;
+    width:340px; height:340px;
+    border-radius:50%;
+    border:1px solid var(--moss-100);
+    opacity:0;
+    animation: ringGrow 2.6s var(--ease) .1s forwards;
+  }
+  @keyframes ringGrow{
+    0%{ opacity:0; transform:scale(.7); }
+    30%{ opacity:1; }
+    100%{ opacity:0; transform:scale(1.25); }
+  }
+
+  /* ================= APP SHELL ================= */
+  #app{
+    position:relative; z-index:1;
+    min-height:100vh;
+    opacity:0;
+    transform: translateY(10px);
+    transition: opacity .7s var(--ease-soft) .05s, transform .7s var(--ease-soft) .05s;
+  }
+  #app.show{ opacity:1; transform:translateY(0); }
+
+  .topbar{
+    max-width:920px; margin:0 auto;
+    padding: 40px 28px 8px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .brand{
+    display:flex; align-items:center; gap:12px;
+  }
+  .brand-mark{
+    width:40px; height:40px; border-radius:14px;
+    background: linear-gradient(155deg, var(--moss-500), var(--moss-700));
+    display:flex; align-items:center; justify-content:center;
+    box-shadow: var(--shadow-soft);
+    flex-shrink:0;
+  }
+  .brand-mark svg{ width:20px; height:20px; }
+  .brand-title{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    font-size:1.55rem;
+    color:var(--moss-900);
+    letter-spacing:.3px;
+  }
+  .brand-title .dim{ color:var(--moss-500); font-style:italic; font-weight:400; }
+
+  .menu-btn{
+    width:46px; height:46px; border-radius:50%;
+    border:1px solid var(--line);
+    background: var(--paper);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    transition: background .25s var(--ease-soft), border-color .25s var(--ease-soft), transform .25s var(--ease-soft);
+    box-shadow: 0 2px 10px -4px rgba(35,47,28,0.15);
+  }
+  .menu-btn:hover{
+    background: var(--moss-50);
+    border-color:var(--moss-300);
+    transform: translateY(-2px);
+  }
+  .menu-btn svg{ width:20px; height:20px; }
+
+  main{
+    max-width:920px; margin:0 auto;
+    padding: 20px 28px 100px;
+  }
+
+  /* ================= LANG SWITCH ================= */
+  .lang-switch{
+    display:flex; align-items:center; justify-content:center;
+    gap:10px;
+    margin: 26px auto 30px;
+    padding:6px;
+    background: var(--paper-2);
+    border:1px solid var(--line);
+    border-radius: var(--radius-pill);
+    width: min(300px, 100%);
+    box-shadow: inset 0 1px 3px rgba(35,47,28,0.06);
+    position:relative;
+  }
+  .lang-opt{
+    position:relative;
+    flex: 1 1 0;
+    padding:12px 20px;
+    border-radius: var(--radius-pill);
+    border:none;
+    background:transparent;
+    font-family:'Vazirmatn', sans-serif;
+    font-size:.98rem;
+    font-weight:600;
+    color: var(--moss-700);
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    transition: color .22s var(--ease-soft);
+    z-index:2;
+    white-space:nowrap;
+  }
+  .lang-opt .eng{ font-size:1.02rem; }
+  .lang-opt.active{ color:#fff; }
+  .lang-switch-bg{
+    position:absolute;
+    top:6px; bottom:6px;
+    right:6px;
+    width: calc(50% - 8px);
+    border-radius: var(--radius-pill);
+    background: linear-gradient(135deg, var(--moss-500), var(--moss-700));
+    transition: transform .28s var(--ease-soft);
+    box-shadow: 0 8px 20px -6px rgba(87,112,62,0.55);
+    will-change: transform;
+  }
+  .lang-switch[data-dir="en-fa"] .lang-switch-bg{ transform: translateX(0); }
+  .lang-switch[data-dir="fa-en"] .lang-switch-bg{ transform: translateX(calc(-100% - 6px)); }
+
+  /* ================= SEARCH ================= */
+  .search-wrap{
+    position:relative;
+    max-width:340px; margin:0 auto;
+  }
+  .search-box{
+    display:flex; align-items:center; gap:14px;
+    background: linear-gradient(135deg, rgba(111,138,82,0.10), rgba(111,138,82,0.05)) , #fff;
+    border:1.5px solid var(--line);
+    border-radius: var(--radius-pill);
+    padding: 22px 30px;
+    box-shadow: var(--shadow-soft);
+    transition: border-color .25s var(--ease-soft), box-shadow .25s var(--ease-soft), transform .25s var(--ease-soft);
+  }
+  .search-box:focus-within{
+    border-color: var(--moss-500);
+    box-shadow: 0 0 0 5px rgba(111,138,82,0.14), var(--shadow-soft);
+    transform: translateY(-2px);
+  }
+  .search-box svg{ width:22px; height:22px; color:var(--moss-600); flex-shrink:0; }
+  #search-input{
+    flex:1; border:none; outline:none; background:transparent;
+    font-family:inherit; font-size:1.1rem; font-weight:500;
+    color:var(--ink);
+    padding:0;
+    min-width:0;
+  }
+  #search-input::placeholder{ color:#97a48c; font-weight:500; }
+  .search-clear{
+    width:30px; height:30px; border-radius:50%;
+    border:none; background:rgba(111,138,82,0.14);
+    display:none; align-items:center; justify-content:center;
+    cursor:pointer; color:var(--moss-700); flex-shrink:0;
+    transition: background .2s var(--ease-soft);
+  }
+  .search-clear.show{ display:flex; }
+  .search-clear:hover{ background:rgba(111,138,82,0.24); }
+
+  /* Suggestions dropdown */
+  #suggestions{
+    position:absolute; top:calc(100% + 12px); left:0; right:0;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-deep);
+    overflow:hidden;
+    opacity:0; visibility:hidden; transform: translateY(-8px) scale(.98);
+    transition: opacity .2s var(--ease-soft), transform .2s var(--ease-soft), visibility .2s var(--ease-soft);
+    z-index:50;
+    max-height:360px;
+    overflow-y:auto;
+  }
+  #suggestions.show{ opacity:1; visibility:visible; transform: translateY(0) scale(1); }
+  .sugg-item{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 24px;
+    cursor:pointer;
+    border-bottom:1px solid var(--line);
+    transition: background .25s;
+  }
+  .sugg-item:last-child{ border-bottom:none; }
+  .sugg-item:hover, .sugg-item.hi{ background:var(--moss-50); }
+  .sugg-word{ font-weight:600; font-size:1.02rem; }
+  .sugg-word .eng{ font-size:1.05rem; }
+  .sugg-word mark{ background:transparent; color:var(--moss-600); font-weight:800; }
+  .sugg-tag{
+    font-size:.72rem; padding:4px 11px; border-radius:99px;
+    background:var(--moss-100); color:var(--moss-700); font-weight:600;
+    flex-shrink:0; margin-inline-start:12px;
+  }
+
+  /* ================= STATE PANELS ================= */
+  .state-panel{
+    max-width:640px; margin: 44px auto 0;
+    text-align:center;
+    opacity:0; animation: fadeUp .35s var(--ease-soft) forwards;
+  }
+  @keyframes fadeUp{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+
+  .empty-state{ padding: 30px 20px; color:#8a9481; }
+  .empty-state svg{ width:64px; height:64px; margin-bottom:18px; opacity:.6; }
+  .empty-state p{ font-size:1.02rem; line-height:2; }
+
+  .loading-state{ display:flex; flex-direction:column; align-items:center; gap:18px; padding:50px 20px; }
+  .spinner{
+    width:44px; height:44px; border-radius:50%;
+    border:3px solid var(--moss-100);
+    border-top-color: var(--moss-500);
+    animation: spin 0.9s linear infinite;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .error-state{ padding:30px 20px; color:#a15a4a; }
+  .error-state svg{ width:52px; height:52px; margin-bottom:14px; }
+
+  /* ================= RESULT CARD ================= */
+  #result{
+    max-width:720px; margin: 40px auto 0;
+  }
+  .result-card{
+    background:#fff;
+    border:1.5px solid var(--line);
+    border-radius: var(--radius-xl);
+    padding: 40px 40px 34px;
+    box-shadow: var(--shadow-soft);
+    opacity:0;
+    transform: translateY(16px);
+    animation: cardIn .4s var(--ease-soft) forwards;
+  }
+  @keyframes cardIn{ to{ opacity:1; transform:translateY(0); } }
+
+  .result-head{
+    display:flex; align-items:flex-start; justify-content:space-between;
+    gap:20px; margin-bottom:6px;
+    flex-wrap:wrap;
+  }
+  .result-word{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size: clamp(1.9rem, 5vw, 2.6rem);
+    color: var(--moss-900);
+    line-height:1.2;
+  }
+  .result-word.fa{ font-family:'Vazirmatn', sans-serif; font-weight:700; }
+  .result-phonetic{
+    font-family:'Fraunces', serif; font-style:italic;
+    color:var(--moss-500); font-size:1.05rem; margin-top:6px;
+  }
+  .speak-btn{
+    width:44px; height:44px; border-radius:50%; flex-shrink:0;
+    border:1px solid var(--line); background:var(--moss-50);
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    transition: background .2s var(--ease-soft), transform .2s var(--ease-soft);
+    color:var(--moss-700);
+  }
+  .speak-btn:hover{ background:var(--moss-100); transform:scale(1.08); }
+  .speak-btn svg{ width:19px; height:19px; }
+
+  .primary-meaning{
+    margin: 22px 0 10px;
+    padding: 20px 26px;
+    background: linear-gradient(135deg, var(--moss-50), var(--paper-2));
+    border: 1px solid var(--moss-100);
+    border-radius: var(--radius-lg);
+    position:relative;
+  }
+  .primary-meaning::before{
+    content: attr(data-label);
+    position:absolute; top:-11px; right:22px;
+    background: linear-gradient(135deg, var(--moss-500), var(--moss-700));
+    color:#fff; font-size:.72rem; font-weight:700;
+    padding:4px 14px; border-radius:99px;
+    letter-spacing:.3px;
+    box-shadow: 0 4px 10px -3px rgba(87,112,62,0.5);
+  }
+  .primary-meaning .txt{
+    font-size:1.28rem; font-weight:700; color:var(--moss-900);
+    line-height:1.7;
+  }
+
+  .meanings-list{ margin-top:26px; display:flex; flex-direction:column; gap:14px; }
+  .meaning-item{
+    display:flex; gap:16px; align-items:flex-start;
+    padding: 16px 20px;
+    border-radius: var(--radius-md);
+    background: var(--paper);
+    border: 1px solid var(--line);
+    transition: border-color .2s var(--ease-soft), transform .2s var(--ease-soft);
+    opacity:0; transform:translateY(8px);
+    animation: itemIn .32s var(--ease-soft) forwards;
+  }
+  .meaning-item:hover{ border-color:var(--moss-300); transform: translateX(-2px); }
+  @keyframes itemIn{ to{ opacity:1; transform:translateY(0); } }
+  .meaning-num{
+    width:30px; height:30px; border-radius:50%; flex-shrink:0;
+    background: var(--moss-100); color:var(--moss-700);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:.9rem;
+  }
+  .meaning-body{ flex:1; min-width:0; }
+  .meaning-pos{
+    display:inline-block; font-size:.72rem; font-weight:700;
+    color:var(--gold); text-transform:uppercase; letter-spacing:.5px;
+    margin-bottom:5px;
+  }
+  .meaning-text{ font-size:1.02rem; line-height:1.85; color:var(--ink); }
+  .meaning-example{
+    margin-top:8px; font-size:.92rem; color:#7c8873; font-style:italic;
+    padding-inline-start:12px; border-inline-start:2px solid var(--moss-100);
+  }
+
+  .syn-section{ margin-top:26px; }
+  .syn-title{ font-size:.85rem; font-weight:700; color:var(--moss-600); margin-bottom:10px; }
+  .syn-chips{ display:flex; flex-wrap:wrap; gap:8px; }
+  .syn-chip{
+    padding:7px 16px; border-radius:99px;
+    background:var(--paper-2); border:1px solid var(--line);
+    font-size:.88rem; color:var(--moss-700); cursor:pointer;
+    transition: all .25s;
+  }
+  .syn-chip:hover{ background:var(--moss-100); border-color:var(--moss-300); transform:translateY(-1px); }
+
+  /* ================= SIDE PANEL ================= */
+  #overlay{
+    position:fixed; inset:0; background:rgba(32,38,31,0.35);
+    backdrop-filter: blur(3px);
+    z-index:200; opacity:0; visibility:hidden;
+    transition: opacity .25s var(--ease-soft), visibility .25s var(--ease-soft);
+  }
+  #overlay.show{ opacity:1; visibility:visible; }
+
+  #side-panel{
+    position:fixed; top:0; bottom:0; right:0;
+    width:min(400px, 88vw);
+    background: var(--paper);
+    z-index:201;
+    box-shadow: -20px 0 60px -20px rgba(35,47,28,0.4);
+    transform: translateX(100%);
+    transition: transform .32s var(--ease-soft);
+    display:flex; flex-direction:column;
+    border-radius: 32px 0 0 32px;
+    will-change: transform;
+  }
+  #side-panel.show{ transform: translateX(0); }
+
+  .panel-head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 30px 28px 20px;
+    border-bottom:1px solid var(--line);
+  }
+  .panel-title{ font-family:'Fraunces', serif; font-size:1.4rem; font-weight:600; color:var(--moss-900); }
+  .panel-close{
+    width:40px; height:40px; border-radius:50%; border:1px solid var(--line);
+    background:#fff; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; transition: background .25s var(--ease-soft), transform .25s var(--ease-soft);
+  }
+  .panel-close:hover{ background:var(--moss-50); transform:rotate(90deg); }
+  .panel-close svg{ width:18px; height:18px; }
+
+  .panel-body{ flex:1; overflow-y:auto; padding: 22px 24px; }
+
+  .panel-item{
+    display:flex; align-items:center; gap:16px;
+    padding: 16px 18px;
+    border-radius: var(--radius-md);
+    cursor:pointer;
+    transition: background .2s var(--ease-soft);
+    margin-bottom:8px;
+  }
+  .panel-item:hover{ background:var(--moss-50); }
+  .panel-item-icon{
+    width:42px; height:42px; border-radius:50%; flex-shrink:0;
+    background: var(--moss-100); color:var(--moss-700);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .panel-item-icon svg{ width:19px; height:19px; }
+  .panel-item-text{ font-weight:600; font-size:1rem; }
+  .panel-item-sub{ font-size:.8rem; color:#8a9481; margin-top:2px; }
+
+  .history-section{ margin-top:8px; }
+  .history-title{
+    font-size:.8rem; font-weight:700; color:var(--moss-600);
+    text-transform:uppercase; letter-spacing:.4px;
+    padding: 4px 6px 12px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .clear-history{
+    font-size:.75rem; color:#a15a4a; cursor:pointer; font-weight:600;
+    background:none; border:none; font-family:inherit;
+  }
+  .history-list{ display:flex; flex-direction:column; gap:6px; }
+  .history-item{
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+    background:#fff; border:1px solid var(--line);
+    cursor:pointer;
+    transition: all .25s;
+  }
+  .history-item:hover{ border-color:var(--moss-300); transform: translateX(-3px); }
+  .history-word{ font-weight:600; font-size:.95rem; }
+  .history-lang{
+    font-size:.68rem; padding:3px 10px; border-radius:99px;
+    background:var(--moss-50); color:var(--moss-600); font-weight:700;
+  }
+  .history-empty{ text-align:center; padding: 30px 10px; color:#9aa593; font-size:.92rem; }
+
+  .panel-footer{
+    padding: 20px 28px 26px;
+    border-top:1px solid var(--line);
+    text-align:center;
+  }
+  .panel-footer .credit{
+    font-size:.82rem; color:#8a9481;
+  }
+  .panel-footer .credit b{
+    color: var(--moss-700); font-weight:700;
+  }
+  .panel-footer .heart{ color:#b56a5a; }
+
+  /* view: history full list */
+  #history-view{ display:none; }
+  #history-view.active{ display:block; }
+  #main-menu-view.hidden{ display:none; }
+  .back-row{
+    display:flex; align-items:center; gap:10px;
+    padding: 4px 6px 16px; cursor:pointer;
+    color: var(--moss-600); font-weight:600; font-size:.92rem;
+  }
+  .back-row svg{ width:18px; height:18px; }
+
+  /* ================= RESPONSIVE ================= */
+  @media (max-width: 560px){
+    .topbar{ padding: 30px 20px 4px; }
+    main{ padding: 16px 18px 90px; }
+    .result-card{ padding: 28px 22px 26px; border-radius: 28px; }
+    .lang-opt{ padding:11px 18px; font-size:.9rem; }
+    .primary-meaning{ padding:16px 18px; }
+    #side-panel{ border-radius: 26px 0 0 26px; }
+    .search-box{ padding: 19px 24px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  }
+
+  .visually-hidden{
+    position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0);
+  }
+
+  :focus-visible{
+    outline: 2.5px solid var(--moss-500);
+    outline-offset: 3px;
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-field"></div>
+
+<!-- ============ INTRO ============ -->
+<div id="intro">
+  <div class="intro-ring"></div>
+  <svg class="intro-leaf" viewBox="0 0 24 24" fill="none" stroke="#57703e" stroke-width="1.4">
+    <path d="M12 2C7 2 3 7 3 13c0 5 4 9 9 9s9-4 9-9c0-1-.1-2-.3-2.9C18 12 15 14 12 14c0-4 2-8 6-10-2-1.3-4-2-6-2z" stroke-linejoin="round"/>
+    <path d="M12 22V10" stroke-linecap="round"/>
+  </svg>
+  <div class="intro-hello eng">Hello</div>
+  <div class="intro-sub">Welcome to Dictionary</div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8">
+          <path d="M4 19.5V5a2 2 0 0 1 2-2h13v15H6a2 2 0 0 0-2 2.5z" stroke-linejoin="round"/>
+          <path d="M4 19.5A2 2 0 0 1 6 17.5h13" stroke-linejoin="round"/>
+          <path d="M8.5 7h6M8.5 10.5h4" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="brand-title"><span class="eng">Dictionary</span></div>
+    </div>
+    <button class="menu-btn" id="menu-btn" aria-label="منو">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#3e5230" stroke-width="2.2" stroke-linecap="round">
+        <circle cx="5" cy="12" r="1.4" fill="#3e5230" stroke="none"/>
+        <circle cx="12" cy="12" r="1.4" fill="#3e5230" stroke="none"/>
+        <circle cx="19" cy="12" r="1.4" fill="#3e5230" stroke="none"/>
+      </svg>
+    </button>
+  </header>
+
+  <main>
+    <div class="lang-switch" id="lang-switch" data-dir="en-fa">
+      <div class="lang-switch-bg"></div>
+      <button class="lang-opt active" id="opt-en-fa" type="button">
+        <span class="eng">EN</span> → فا
+      </button>
+      <button class="lang-opt" id="opt-fa-en" type="button">
+        فا → <span class="eng">EN</span>
+      </button>
+    </div>
+
+    <div class="search-wrap">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" id="search-input" autocomplete="off" spellcheck="false" placeholder="یک کلمه انگلیسی بنویسید...">
+        <button class="search-clear" id="search-clear" aria-label="پاک کردن" type="button">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#57703e" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div id="suggestions"></div>
+    </div>
+
+    <div id="content-area">
+      <div class="state-panel">
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#a9bd8c" stroke-width="1.4"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <p>برای شروع، یک کلمه بنویسید<br>هرچه تایپ می‌کنید، پیشنهادها نمایش داده می‌شود</p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ============ SIDE PANEL ============ -->
+<div id="overlay"></div>
+<aside id="side-panel">
+  <div class="panel-head">
+    <div class="panel-title">منو</div>
+    <button class="panel-close" id="panel-close" aria-label="بستن">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#3e5230" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+
+  <div class="panel-body">
+    <div id="main-menu-view">
+      <div class="panel-item" id="go-history">
+        <div class="panel-item-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg>
+        </div>
+        <div>
+          <div class="panel-item-text">تاریخچه جستجو</div>
+          <div class="panel-item-sub">۲۰ جستجوی اخیر شما</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="history-view">
+      <div class="back-row" id="back-to-menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6" transform="rotate(180 12 12)"/></svg>
+        برگشت
+      </div>
+      <div class="history-section">
+        <div class="history-title">
+          <span>تاریخچه</span>
+          <button class="clear-history" id="clear-history-btn">حذف همه</button>
+        </div>
+        <div class="history-list" id="history-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-footer">
+    <div class="credit">برنامه‌نویس: <b>امیر حسین نادری</b></div>
+  </div>
+</aside>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============================================================
+     STATE
+  ============================================================ */
+  const state = {
+    dir: 'en-fa', // 'en-fa' or 'fa-en'
+    history: JSON.parse(localStorage.getItem('dict_history') || '[]'),
+    debounceTimer: null,
+    activeSuggestionIndex: -1,
+    currentSuggestions: [],
+    lastQuery: ''
+  };
+
+  /* ============================================================
+     ELEMENTS
+  ============================================================ */
+  const el = {
+    intro: document.getElementById('intro'),
+    app: document.getElementById('app'),
+    langSwitch: document.getElementById('lang-switch'),
+    optEnFa: document.getElementById('opt-en-fa'),
+    optFaEn: document.getElementById('opt-fa-en'),
+    input: document.getElementById('search-input'),
+    clearBtn: document.getElementById('search-clear'),
+    suggestions: document.getElementById('suggestions'),
+    contentArea: document.getElementById('content-area'),
+    menuBtn: document.getElementById('menu-btn'),
+    overlay: document.getElementById('overlay'),
+    sidePanel: document.getElementById('side-panel'),
+    panelClose: document.getElementById('panel-close'),
+    goHistory: document.getElementById('go-history'),
+    backToMenu: document.getElementById('back-to-menu'),
+    mainMenuView: document.getElementById('main-menu-view'),
+    historyView: document.getElementById('history-view'),
+    historyList: document.getElementById('history-list'),
+    clearHistoryBtn: document.getElementById('clear-history-btn')
+  };
+
+  /* ============================================================
+     INTRO SEQUENCE
+     Smooth but not slow: ~2.6s total before transitioning
+  ============================================================ */
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      el.intro.classList.add('hide');
+      el.app.classList.add('show');
+      setTimeout(() => { el.intro.style.display = 'none'; }, 1200);
+    }, 2200);
+  });
+  // Fallback in case 'load' already fired
+  if (document.readyState === 'complete') {
+    setTimeout(() => {
+      el.intro.classList.add('hide');
+      el.app.classList.add('show');
+      setTimeout(() => { el.intro.style.display = 'none'; }, 1200);
+    }, 2200);
+  }
+
+  /* ============================================================
+     LANGUAGE SWITCH
+  ============================================================ */
+  function setDirection(dir){
+    state.dir = dir;
+    el.langSwitch.dataset.dir = dir;
+    el.optEnFa.classList.toggle('active', dir === 'en-fa');
+    el.optFaEn.classList.toggle('active', dir === 'fa-en');
+    el.input.placeholder = dir === 'en-fa'
+      ? 'یک کلمه انگلیسی بنویسید...'
+      : 'یک کلمه فارسی بنویسید...';
+    el.input.value = '';
+    el.clearBtn.classList.remove('show');
+    hideSuggestions();
+    showEmptyState();
+    el.input.focus();
+  }
+  el.optEnFa.addEventListener('click', () => setDirection('en-fa'));
+  el.optFaEn.addEventListener('click', () => setDirection('fa-en'));
+
+  /* ============================================================
+     LOCAL DICTIONARY DATA (curated core + fallback offline set)
+     A broad seed list to guarantee instant, high-quality
+     suggestions even before/without network round trips.
+     The live API supplies full coverage beyond this seed.
+  ============================================================ */
+  const seedWords = ["the","be","to","of","and","a","in","that","have","it","for","not","on","with","he","as","you","do","at","this","but","his","by","from","they","we","say","her","she","or","an","will","my","one","all","would","there","their","what","so","up","out","if","about","who","get","which","go","me","when","make","can","like","time","no","just","him","know","take","people","into","year","your","good","some","could","them","see","other","than","then","now","look","only","come","its","over","think","also","back","after","use","two","how","our","work","first","well","way","even","new","want","because","any","these","give","day","most","us","love","hope","dream","water","fire","earth","air","sun","moon","star","sky","tree","flower","mountain","river","ocean","forest","light","dark","night","morning","evening","friend","family","home","house","school","book","study","learn","teach","student","teacher","word","language","language","speak","listen","write","read","understand","question","answer","problem","solution","idea","thought","feeling","emotion","happy","sad","angry","afraid","surprised","excited","tired","hungry","thirsty","healthy","sick","strong","weak","fast","slow","big","small","tall","short","long","wide","narrow","beautiful","ugly","clean","dirty","hot","cold","warm","cool","dry","wet","hard","soft","heavy","light","new","old","young","early","late","near","far","high","low","open","closed","full","empty","easy","difficult","right","wrong","true","false","free","busy","rich","poor","cheap","expensive","safe","dangerous","quiet","loud","gentle","brave","kind","cruel","honest","polite","rude","patient","lazy","smart","stupid","funny","serious","boring","interesting","famous","normal","strange","perfect","careful","careless","curious","proud","jealous","nervous","calm","confident","shy","generous","selfish","loyal","faithful","true","hope","dream","success","failure","victory","defeat","peace","war","freedom","justice","truth","lie","beauty","ugliness","courage","fear","wisdom","knowledge","power","weakness","health","illness","life","death","birth","growth","change","development","progress","future","past","present","history","memory","imagination","creativity","art","music","dance","painting","sculpture","poem","poetry","story","novel","movie","film","theatre","game","sport","competition","team","player","winner","loser","champion","goal","dream","wish","desire","need","want","choice","decision","opportunity","challenge","achievement","effort","hard","work","success","failure","mistake","error","correct","incorrect","true","false","possible","impossible","certain","uncertain","clear","unclear","simple","complex","direct","indirect","positive","negative","active","passive","public","private","local","global","national","international","modern","traditional","ancient","future","natural","artificial","real","fake","original","copy","unique","common","rare","special","general","specific","abstract","concrete","physical","mental","emotional","spiritual","social","political","economic","cultural","religious","scientific","technical","practical","theoretical","logical","creative","imaginative","realistic","idealistic","optimistic","pessimistic"];
+
+  const localCache = new Set(seedWords);
+
+  /* ============================================================
+     PERSIAN <-> ENGLISH: quick local Persian seed for suggestions
+     (small curated set to seed fa->en direction; API handles the rest)
+  ============================================================ */
+  const faSeedWords = ["سلام","خداحافظ","عشق","دوست","خانواده","مدرسه","کتاب","آب","آتش","خورشید","ماه","ستاره","آسمان","درخت","گل","کوه","رودخانه","دریا","جنگل","نور","تاریکی","شب","صبح","عصر","خانه","درس","یادگیری","معلم","دانش‌آموز","کلمه","زبان","صحبت","گوش","نوشتن","خواندن","فهمیدن","سوال","جواب","مشکل","راه‌حل","ایده","فکر","احساس","خوشحال","غمگین","عصبانی","ترسیده","شگفت‌زده","هیجان‌زده","خسته","گرسنه","تشنه","سالم","بیمار","قوی","ضعیف","سریع","آهسته","بزرگ","کوچک","بلند","کوتاه","زیبا","زشت","تمیز","کثیف","گرم","سرد","سخت","نرم","سنگین","سبک","جدید","قدیمی","جوان","زود","دیر","نزدیک","دور","بالا","پایین","باز","بسته","پر","خالی","آسان","سخت","درست","غلط","راست","دروغ","آزاد","مشغول","ثروتمند","فقیر","ارزان","گران","امن","خطرناک","آرام","بلند","مهربان","شجاع","صادق","مودب","بی‌ادب","صبور","تنبل","باهوش","احمق","خنده‌دار","جدی","خسته‌کننده","جالب","معروف","عادی","عجیب","کامل","دقیق","کنجکاو","مغرور","حسود","عصبی","آرام","با اعتماد به نفس","خجالتی","سخاوتمند","خودخواه","وفادار","امید","رویا","موفقیت","شکست","پیروزی","صلح","جنگ","آزادی","عدالت","حقیقت","زیبایی","شجاعت","ترس","خرد","دانش","قدرت","سلامتی","زندگی","مرگ","تولد","رشد","تغییر","پیشرفت","آینده","گذشته","حال","تاریخ","خاطره","تخیل","خلاقیت","هنر","موسیقی","رقص","نقاشی","شعر","داستان","رمان","فیلم","تئاتر","بازی","ورزش","مسابقه","تیم","بازیکن","برنده","بازنده","قهرمان","هدف","آرزو","نیاز","انتخاب","تصمیم","فرصت","چالش","دستاورد","تلاش","کار","اشتباه","خطا","ممکن","غیرممکن","مطمئن","نامطمئن","واضح","نامشخص","ساده","پیچیده"];
+
+  /* ============================================================
+     COMPREHENSIVE LOCAL FALLBACK MEANINGS (Persian translations
+     for common words) — used as instant fallback + primary sense
+     when API is slow, ensuring zero perceived gaps.
+  ============================================================ */
+  const quickFa = {
+    "hello":"سلام","love":"عشق","friend":"دوست","water":"آب","fire":"آتش","book":"کتاب",
+    "school":"مدرسه","happy":"خوشحال","sad":"غمگین","home":"خانه","dream":"رویا",
+    "beautiful":"زیبا","strong":"قوی","time":"زمان","world":"دنیا","life":"زندگی",
+    "peace":"صلح","light":"نور","dark":"تاریکی","music":"موسیقی","food":"غذا"
+  };
+
+  /* ============================================================
+     DEBOUNCE UTIL
+  ============================================================ */
+  function debounce(fn, wait){
+    return function(...args){
+      clearTimeout(state.debounceTimer);
+      state.debounceTimer = setTimeout(() => fn.apply(this, args), wait);
+    };
+  }
+
+  /* ============================================================
+     SUGGESTIONS ENGINE
+     Strategy:
+     1. Instant local fuzzy match against seed list (0ms latency)
+     2. Parallel live API datamuse fetch for broader real-time coverage
+     3. Merge & rank: startswith > contains > fuzzy distance
+  ============================================================ */
+  function scoreMatch(word, query){
+    const w = word.toLowerCase();
+    const q = query.toLowerCase();
+    if (w === q) return 100;
+    if (w.startsWith(q)) return 90 - (w.length - q.length);
+    if (w.includes(q)) return 60 - w.indexOf(q);
+    return -1;
+  }
+
+  function localSuggest(query, sourceList){
+    const q = query.trim();
+    if (!q) return [];
+    const scored = [];
+    for (const w of sourceList){
+      const s = scoreMatch(w, q);
+      if (s > 0) scored.push({ word: w, score: s });
+    }
+    scored.sort((a,b) => b.score - a.score);
+    return scored.slice(0, 8).map(x => x.word);
+  }
+
+  async function fetchDatamuseSuggestions(query){
+    try{
+      const url = `https://api.datamuse.com/sug?s=${encodeURIComponent(query)}&max=8`;
+      const res = await fetch(url);
+      if (!res.ok) return [];
+      const data = await res.json();
+      return data.map(d => d.word);
+    }catch(e){ return []; }
+  }
+
+  async function fetchPersianSuggestions(query){
+    // Use MyMemory (free, no key) to help find close terms is unreliable for suggestions,
+    // so we rely primarily on local seed + growing history for fa direction suggestions.
+    return localSuggest(query, faSeedWords.concat(state.history.filter(h=>h.dir==='fa-en').map(h=>h.query)));
+  }
+
+  function highlightMatch(word, query){
+    const idx = word.toLowerCase().indexOf(query.toLowerCase());
+    if (idx === -1) return escapeHtml(word);
+    return escapeHtml(word.slice(0,idx)) + '<mark>' + escapeHtml(word.slice(idx, idx+query.length)) + '</mark>' + escapeHtml(word.slice(idx+query.length));
+  }
+
+  function escapeHtml(s){
+    return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function renderSuggestions(list, query){
+    state.currentSuggestions = list;
+    state.activeSuggestionIndex = -1;
+    if (!list.length){ hideSuggestions(); return; }
+    el.suggestions.innerHTML = list.map((w) => `
+      <div class="sugg-item" data-word="${escapeHtml(w)}">
+        <span class="sugg-word ${state.dir==='en-fa' ? 'eng' : ''}">${highlightMatch(w, query)}</span>
+        <span class="sugg-tag">${state.dir === 'en-fa' ? 'EN' : 'فا'}</span>
+      </div>
+    `).join('');
+    el.suggestions.classList.add('show');
+    el.suggestions.querySelectorAll('.sugg-item').forEach(item => {
+      item.addEventListener('click', () => {
+        el.input.value = item.dataset.word;
+        hideSuggestions();
+        performSearch(item.dataset.word);
+      });
+    });
+  }
+
+  function hideSuggestions(){
+    el.suggestions.classList.remove('show');
+    el.suggestions.innerHTML = '';
+    state.currentSuggestions = [];
+    state.activeSuggestionIndex = -1;
+  }
+
+  const handleTyping = debounce(async function(){
+    const q = el.input.value.trim();
+    el.clearBtn.classList.toggle('show', q.length > 0);
+    if (q.length < 1){ hideSuggestions(); return; }
+
+    if (state.dir === 'en-fa'){
+      const local = localSuggest(q, seedWords);
+      renderSuggestions(local, q);
+      const remote = await fetchDatamuseSuggestions(q);
+      if (el.input.value.trim() !== q) return; // stale
+      const merged = Array.from(new Set([...local, ...remote])).slice(0, 8);
+      renderSuggestions(merged, q);
+    } else {
+      const local = await fetchPersianSuggestions(q);
+      renderSuggestions(local, q);
+    }
+  }, 180);
+
+  el.input.addEventListener('input', handleTyping);
+
+  el.input.addEventListener('keydown', (e) => {
+    const items = el.suggestions.querySelectorAll('.sugg-item');
+    if (e.key === 'ArrowDown'){
+      e.preventDefault();
+      if (!items.length) return;
+      state.activeSuggestionIndex = (state.activeSuggestionIndex + 1) % items.length;
+      updateHighlight(items);
+    } else if (e.key === 'ArrowUp'){
+      e.preventDefault();
+      if (!items.length) return;
+      state.activeSuggestionIndex = (state.activeSuggestionIndex - 1 + items.length) % items.length;
+      updateHighlight(items);
+    } else if (e.key === 'Enter'){
+      e.preventDefault();
+      if (state.activeSuggestionIndex >= 0 && items[state.activeSuggestionIndex]){
+        const w = items[state.activeSuggestionIndex].dataset.word;
+        el.input.value = w;
+        hideSuggestions();
+        performSearch(w);
+      } else {
+        hideSuggestions();
+        performSearch(el.input.value.trim());
+      }
+    } else if (e.key === 'Escape'){
+      hideSuggestions();
+    }
+  });
+
+  function updateHighlight(items){
+    items.forEach((it, i) => it.classList.toggle('hi', i === state.activeSuggestionIndex));
+    if (state.activeSuggestionIndex >= 0) items[state.activeSuggestionIndex].scrollIntoView({block:'nearest'});
+  }
+
+  document.addEventListener('click', (e) => {
+    if (!el.suggestions.contains(e.target) && e.target !== el.input){
+      hideSuggestions();
+    }
+  });
+
+  el.clearBtn.addEventListener('click', () => {
+    el.input.value = '';
+    el.clearBtn.classList.remove('show');
+    hideSuggestions();
+    showEmptyState();
+    el.input.focus();
+  });
+
+  /* ============================================================
+     RENDER STATES
+  ============================================================ */
+  function showEmptyState(){
+    el.contentArea.innerHTML = `
+      <div class="state-panel">
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#a9bd8c" stroke-width="1.4"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <p>برای شروع، یک کلمه بنویسید<br>هرچه تایپ می‌کنید، پیشنهادها نمایش داده می‌شود</p>
+        </div>
+      </div>`;
+  }
+
+  function showLoadingState(){
+    el.contentArea.innerHTML = `
+      <div class="state-panel">
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p style="color:#8a9481; font-size:.95rem;">در حال جستجو در دیکشنری...</p>
+        </div>
+      </div>`;
+  }
+
+  function showErrorState(msg){
+    el.contentArea.innerHTML = `
+      <div class="state-panel">
+        <div class="error-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#a15a4a" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="13"/><circle cx="12" cy="16.5" r="0.6" fill="#a15a4a"/></svg>
+          <p style="font-size:1.02rem; font-weight:600; margin-bottom:6px;">کلمه‌ای یافت نشد</p>
+          <p style="font-size:.9rem; color:#a99287;">${escapeHtml(msg || 'لطفاً کلمه دیگری را امتحان کنید یا املای آن را بررسی کنید.')}</p>
+        </div>
+      </div>`;
+  }
+
+  /* ============================================================
+     SEARCH ENGINE — core lookup logic
+     EN -> FA: dictionaryapi.dev (definitions/POS/examples/phonetics/synonyms)
+               + MyMemory translation API for the Persian meaning
+     FA -> EN: MyMemory translation API (fa->en) as primary meaning,
+               enriched with dictionaryapi.dev on the translated english
+               term for full definitions/examples/POS in Persian-friendly layout
+  ============================================================ */
+  async function performSearch(query){
+    query = (query || '').trim();
+    if (!query) return;
+    state.lastQuery = query;
+    showLoadingState();
+
+    try{
+      if (state.dir === 'en-fa'){
+        await searchEnglishToFarsi(query);
+      } else {
+        await searchFarsiToEnglish(query);
+      }
+    }catch(err){
+      showErrorState('خطا در ارتباط با سرور. اتصال اینترنت خود را بررسی کنید.');
+    }
+  }
+
+  async function translateText(text, langpair){
+    try{
+      const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langpair}`;
+      const res = await fetch(url);
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data?.responseData?.translatedText || null;
+    }catch(e){ return null; }
+  }
+
+  async function searchEnglishToFarsi(word){
+    // 1. Get English definitions
+    let defData = null;
+    try{
+      const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
+      if (res.ok){
+        defData = await res.json();
+      }
+    }catch(e){ /* ignore, fallback below */ }
+
+    // 2. Get Persian translation (primary meaning)
+    const faTranslation = quickFa[word.toLowerCase()] || await translateText(word, 'en|fa');
+
+    if ((!defData || !Array.isArray(defData) || !defData.length) && !faTranslation){
+      showErrorState(`متأسفانه معنی «${escapeHtml(word)}» یافت نشد.`);
+      return;
+    }
+
+    addHistory(word, 'en-fa');
+
+    // Build meanings from dictionaryapi
+    let meaningsHtml = '';
+    let phonetic = '';
+    let allExampleMeanings = [];
+
+    if (defData && Array.isArray(defData) && defData.length){
+      const entry = defData[0];
+      phonetic = entry.phonetic || (entry.phonetics || []).map(p=>p.text).find(Boolean) || '';
+
+      let count = 0;
+      for (const meaning of (entry.meanings || [])){
+        for (const def of (meaning.definitions || [])){
+          if (count >= 5) break;
+          count++;
+          allExampleMeanings.push({
+            pos: meaning.partOfSpeech,
+            text: def.definition,
+            example: def.example || ''
+          });
+        }
+        if (count >= 5) break;
+      }
+    }
+
+    // Translate top definitions to Farsi in parallel for richer display
+    const translatedDefs = await Promise.all(
+      allExampleMeanings.map(async (m) => {
+        const fa = await translateText(m.text, 'en|fa');
+        return { ...m, fa: fa || m.text };
+      })
+    );
+
+    meaningsHtml = translatedDefs.map((m, i) => `
+      <div class="meaning-item" style="animation-delay:${i * 0.06}s">
+        <div class="meaning-num">${i+1}</div>
+        <div class="meaning-body">
+          ${m.pos ? `<span class="meaning-pos">${escapeHtml(m.pos)}</span>` : ''}
+          <div class="meaning-text">${escapeHtml(m.fa)}</div>
+          ${m.example ? `<div class="meaning-example eng">"${escapeHtml(m.example)}"</div>` : ''}
+        </div>
+      </div>
+    `).join('');
+
+    if (!meaningsHtml && faTranslation){
+      meaningsHtml = `
+      <div class="meaning-item">
+        <div class="meaning-num">1</div>
+        <div class="meaning-body">
+          <div class="meaning-text">${escapeHtml(faTranslation)}</div>
+        </div>
+      </div>`;
+    }
+
+    // Synonyms
+    let synonyms = [];
+    if (defData && Array.isArray(defData) && defData.length){
+      for (const meaning of (defData[0].meanings || [])){
+        if (meaning.synonyms) synonyms.push(...meaning.synonyms);
+        for (const def of (meaning.definitions || [])){
+          if (def.synonyms) synonyms.push(...def.synonyms);
+        }
+      }
+    }
+    synonyms = Array.from(new Set(synonyms)).slice(0, 8);
+
+    const primary = faTranslation || (translatedDefs[0] && translatedDefs[0].fa) || '';
+
+    renderResultCard({
+      word,
+      wordClass: 'eng',
+      phonetic,
+      primaryLabel: 'معنی اصلی',
+      primary,
+      meaningsHtml,
+      synonyms,
+      speakLang: 'en-US'
+    });
+  }
+
+  async function searchFarsiToEnglish(word){
+    const enTranslation = await translateText(word, 'fa|en');
+
+    if (!enTranslation){
+      showErrorState(`متأسفانه ترجمه «${escapeHtml(word)}» یافت نشد.`);
+      return;
+    }
+
+    addHistory(word, 'fa-en');
+
+    const cleanEn = enTranslation.trim();
+    const firstWordEn = cleanEn.split(/\s+/)[0].replace(/[.,!?]/g,'');
+
+    // Try to enrich with English dictionary definitions for more senses
+    let meaningsHtml = '';
+    let phonetic = '';
+    let synonyms = [];
+    try{
+      const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(firstWordEn)}`);
+      if (res.ok){
+        const defData = await res.json();
+        if (Array.isArray(defData) && defData.length){
+          const entry = defData[0];
+          phonetic = entry.phonetic || (entry.phonetics||[]).map(p=>p.text).find(Boolean) || '';
+          let count = 0;
+          const items = [];
+          for (const meaning of (entry.meanings || [])){
+            for (const def of (meaning.definitions || [])){
+              if (count >= 5) break;
+              count++;
+              items.push({ pos: meaning.partOfSpeech, text: def.definition, example: def.example || '' });
+            }
+            if (meaning.synonyms) synonyms.push(...meaning.synonyms);
+            if (count >= 5) break;
+          }
+          meaningsHtml = items.map((m,i) => `
+            <div class="meaning-item" style="animation-delay:${i*0.06}s">
+              <div class="meaning-num">${i+1}</div>
+              <div class="meaning-body">
+                ${m.pos ? `<span class="meaning-pos">${escapeHtml(m.pos)}</span>` : ''}
+                <div class="meaning-text eng">${escapeHtml(m.text)}</div>
+                ${m.example ? `<div class="meaning-example eng">"${escapeHtml(m.example)}"</div>` : ''}
+              </div>
+            </div>
+          `).join('');
+        }
+      }
+    }catch(e){ /* fallback below is fine */ }
+
+    if (!meaningsHtml){
+      meaningsHtml = `
+      <div class="meaning-item">
+        <div class="meaning-num">1</div>
+        <div class="meaning-body">
+          <div class="meaning-text eng">${escapeHtml(cleanEn)}</div>
+        </div>
+      </div>`;
+    }
+
+    synonyms = Array.from(new Set(synonyms)).slice(0, 8);
+
+    renderResultCard({
+      word,
+      wordClass: 'fa',
+      phonetic,
+      primaryLabel: 'Primary Meaning',
+      primary: firstWordEn,
+      primaryClass: 'eng',
+      meaningsHtml,
+      synonyms,
+      speakLang: 'fa-IR'
+    });
+  }
+
+  function renderResultCard({word, wordClass, phonetic, primaryLabel, primary, primaryClass, meaningsHtml, synonyms, speakLang}){
+    const synHtml = (synonyms && synonyms.length) ? `
+      <div class="syn-section">
+        <div class="syn-title">کلمات مرتبط</div>
+        <div class="syn-chips">
+          ${synonyms.map(s => `<div class="syn-chip eng" data-word="${escapeHtml(s)}">${escapeHtml(s)}</div>`).join('')}
+        </div>
+      </div>` : '';
+
+    el.contentArea.innerHTML = `
+      <div id="result">
+        <div class="result-card">
+          <div class="result-head">
+            <div>
+              <div class="result-word ${wordClass || ''}">${escapeHtml(word)}</div>
+              ${phonetic ? `<div class="result-phonetic eng">${escapeHtml(phonetic)}</div>` : ''}
+            </div>
+            <button class="speak-btn" id="speak-btn" aria-label="تلفظ">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                <path d="M15.5 8.5a5 5 0 0 1 0 7"/>
+                <path d="M18 6a9 9 0 0 1 0 12"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="primary-meaning" data-label="${primaryLabel}">
+            <div class="txt ${primaryClass || ''}">${escapeHtml(primary || '—')}</div>
+          </div>
+
+          <div class="meanings-list">
+            ${meaningsHtml}
+          </div>
+
+          ${synHtml}
+        </div>
+      </div>
+    `;
+
+    document.getElementById('speak-btn').addEventListener('click', () => {
+      speak(word, speakLang);
+    });
+
+    el.contentArea.querySelectorAll('.syn-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        setDirection('en-fa');
+        el.input.value = chip.dataset.word;
+        performSearch(chip.dataset.word);
+      });
+    });
+  }
+
+  function speak(text, lang){
+    try{
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = lang;
+      u.rate = 0.95;
+      window.speechSynthesis.speak(u);
+    }catch(e){ /* speech not supported, silently ignore */ }
+  }
+
+  /* ============================================================
+     HISTORY
+  ============================================================ */
+  function addHistory(query, dir){
+    const entry = { query, dir, ts: Date.now() };
+    state.history = state.history.filter(h => !(h.query.toLowerCase() === query.toLowerCase() && h.dir === dir));
+    state.history.unshift(entry);
+    state.history = state.history.slice(0, 20);
+    localStorage.setItem('dict_history', JSON.stringify(state.history));
+  }
+
+  function renderHistory(){
+    if (!state.history.length){
+      el.historyList.innerHTML = `<div class="history-empty">هنوز جستجویی ثبت نشده است</div>`;
+      return;
+    }
+    el.historyList.innerHTML = state.history.map(h => `
+      <div class="history-item" data-word="${escapeHtml(h.query)}" data-dir="${h.dir}">
+        <span class="history-word ${h.dir==='en-fa' ? 'eng' : ''}">${escapeHtml(h.query)}</span>
+        <span class="history-lang">${h.dir === 'en-fa' ? 'EN → فا' : 'فا → EN'}</span>
+      </div>
+    `).join('');
+    el.historyList.querySelectorAll('.history-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const dir = item.dataset.dir;
+        setDirection(dir);
+        el.input.value = item.dataset.word;
+        performSearch(item.dataset.word);
+        closePanel();
+      });
+    });
+  }
+
+  el.clearHistoryBtn.addEventListener('click', () => {
+    state.history = [];
+    localStorage.setItem('dict_history', '[]');
+    renderHistory();
+  });
+
+  /* ============================================================
+     SIDE PANEL CONTROLS
+  ============================================================ */
+  function openPanel(){
+    el.overlay.classList.add('show');
+    el.sidePanel.classList.add('show');
+    el.mainMenuView.classList.remove('hidden');
+    el.historyView.classList.remove('active');
+  }
+  function closePanel(){
+    el.overlay.classList.remove('show');
+    el.sidePanel.classList.remove('show');
+  }
+  el.menuBtn.addEventListener('click', openPanel);
+  el.panelClose.addEventListener('click', closePanel);
+  el.overlay.addEventListener('click', closePanel);
+
+  el.goHistory.addEventListener('click', () => {
+    renderHistory();
+    el.mainMenuView.classList.add('hidden');
+    el.historyView.classList.add('active');
+  });
+
+  el.backToMenu.addEventListener('click', () => {
+    el.mainMenuView.classList.remove('hidden');
+    el.historyView.classList.remove('active');
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && el.sidePanel.classList.contains('show')) closePanel();
+  });
+
+  /* Focus input on load for convenience once intro finishes */
+  setTimeout(() => { try{ el.input.focus(); }catch(e){} }, 2500);
+
+})();
+</script>
+</body>
+</html>
